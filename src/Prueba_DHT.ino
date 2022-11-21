@@ -14,17 +14,16 @@ const char* password =  "F@mili@571112";
 
 // Variables del servidor Network Time Protocol
 const char* ntpServer = "co.pool.ntp.org";
-const long  gmtOffset_sec = -21600;
+const long  gmtOffset_sec = -18000;
 const int   daylightOffset_sec = 3600;
 
 #define DHT_PIN 13
 #define DHT_TYPE DHT11
 DHT dht(DHT_PIN, DHT_TYPE);
-struct tm timeinfo;
-char fecha[25];
-char id[30];
-
-char week[10];
+struct tm timeInfo;
+char id[15];
+char idTime[15];
+char date[30];
 
 void setup() {
   Serial.begin(9600);
@@ -45,14 +44,14 @@ void setup() {
 
 void loop() {
   // Obtener la fecha
-  if(!getLocalTime(&timeinfo)){
+  if(!getLocalTime(&timeInfo)){
     Serial.println("Failed to obtain time");
     return;
   }
-  strftime(fecha, 25, "%d-%B-%Y %H:%M", &timeinfo);
-  strftime(id, 30, "%y%j%H%M", &timeinfo);
-
-  strftime(week, 10, "%W", &timeinfo);
+  strftime(id, 15, "%b%y", &timeInfo);
+  strftime(idTime, 15, "W%j%y%H%M", &timeInfo);
+  strftime(date, 30, "%d-%B-%Y %H:%M", &timeInfo);
+  // strftime(date, 30, "%W", &timeInfo);
 
   // Serial.println(week);
   // delay(2000);
@@ -83,17 +82,17 @@ void loop() {
 
   if(WiFi.status()== WL_CONNECTED){
     HTTPClient http;   
-    http.begin("https://2a6jbzx4xd.execute-api.us-east-1.amazonaws.com/items");
+    http.begin("https://60fqd2g261.execute-api.us-east-1.amazonaws.com/records");
     http.addHeader("Content-Type", "text/plain");            
     
     StaticJsonBuffer <300> JSONbuffer;
     JsonObject& JSONencoder = JSONbuffer.createObject();
     JSONencoder["id"] = id;
+    JSONencoder["time"] = idTime;
+    JSONencoder["ubiety"] = "warehouse";
     JSONencoder["temperature"] = temperatureC;
     JSONencoder["humidity"] = humidity;
-    JSONencoder["time"] = fecha;
-    JSONencoder["week"] = week;
-    JSONencoder["ubication"] = "warehouse";
+    JSONencoder["date"] = date;
     char JSONmessageBuffer[300];
     JSONencoder.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
 
